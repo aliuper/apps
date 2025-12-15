@@ -514,7 +514,8 @@ class SmartLinkExtractor {
           // Check if has port
           final hasPort = RegExp(r':\d+$').hasMatch(Uri.parse(base).host + (Uri.parse(base).hasPort ? ':${Uri.parse(base).port}' : ''));
           if (!hasPort && !base.contains(':8080') && !base.contains(':2095')) {
-            base = base.replaceFirst(RegExp(r'(https?://[^/]+)'), '\$1:8080');
+            // DÜZELTİLDİ: replaceFirstMapped kullanılarak $1 sorunu çözüldü
+            base = base.replaceFirstMapped(RegExp(r'(https?://[^/]+)'), (m) => '${m.group(1)}:8080');
           }
           final url = '$base/get.php?username=$user&password=$pwd&type=m3u_plus';
           links.add(url);
