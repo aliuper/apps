@@ -4,7 +4,7 @@ import '../providers/app_provider.dart';
 import '../widgets/widgets.dart';
 import '../services/services.dart';
 import '../models/models.dart';
-import '../theme/app_themes.dart'; // EKLENDİ: Bu satır eksikti
+import '../themes/app_themes.dart'; // DÜZELTİLDİ: 'theme' yerine 'themes' (çoğul)
 
 // ==================== COUNTRY SELECT SCREEN ====================
 class CountrySelectScreen extends StatelessWidget {
