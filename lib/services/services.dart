@@ -413,20 +413,14 @@ class M3UParser {
 // ==================== SMART LINK EXTRACTOR ====================
 class SmartLinkExtractor {
   static final List<RegExp> _urlPatterns = [
-    // Standard m3u links
     RegExp(r'(https?://[^\s<>"\']+?/get\.php\?[^\s<>"\']+)', caseSensitive: false),
-    // Live/Movie/Series streams
     RegExp(r'(https?://[^\s<>"\']+?/live/[^\s<>"\']+)', caseSensitive: false),
     RegExp(r'(https?://[^\s<>"\']+?/movie/[^\s<>"\']+)', caseSensitive: false),
     RegExp(r'(https?://[^\s<>"\']+?/series/[^\s<>"\']+)', caseSensitive: false),
-    // Panel links
     RegExp(r'(https?://[^\s<>"\']+?/panel_api\.php\?[^\s<>"\']+)', caseSensitive: false),
-    // Player API
     RegExp(r'(https?://[^\s<>"\']+?/player_api\.php\?[^\s<>"\']+)', caseSensitive: false),
-    // Direct m3u8/ts
     RegExp(r'(https?://[^\s<>"\']+?\.m3u8?(?:\?[^\s<>"\']*)?)', caseSensitive: false),
     RegExp(r'(https?://[^\s<>"\']+?\.ts(?:\?[^\s<>"\']*)?)', caseSensitive: false),
-    // Generic IPTV ports
     RegExp(r'(https?://[^\s<>"\']+?:(?:8080|8000|25461|2095|2082|80)/[^\s<>"\']+)', caseSensitive: false),
   ];
 
@@ -454,7 +448,7 @@ class SmartLinkExtractor {
       }
     }
 
-    // Method 2: M3U emoji pattern (🎬 𝕄𝟛𝕦)
+    // Method 2: M3U emoji pattern
     final m3uMatches = _m3uEmojiPattern.allMatches(text);
     for (final match in m3uMatches) {
       final url = _cleanUrl(match.group(1) ?? '');
@@ -511,11 +505,10 @@ class SmartLinkExtractor {
         final pwd = i < passwords.length ? passwords[i] : '';
         if (user.isNotEmpty && pwd.isNotEmpty) {
           var base = portal.endsWith('/') ? portal.substring(0, portal.length - 1) : portal;
-          // Check if has port
+          
           final hasPort = RegExp(r':\d+$').hasMatch(Uri.parse(base).host + (Uri.parse(base).hasPort ? ':${Uri.parse(base).port}' : ''));
           if (!hasPort && !base.contains(':8080') && !base.contains(':2095')) {
-            // DÜZELTİLDİ: replaceFirstMapped kullanılarak $1 sorunu çözüldü
-            base = base.replaceFirstMapped(RegExp(r'(https?://[^/]+)'), (m) => '${m.group(1)}:8080');
+             base = base.replaceFirstMapped(RegExp(r'(https?://[^/]+)'), (m) => '${m.group(1)}:8080');
           }
           final url = '$base/get.php?username=$user&password=$pwd&type=m3u_plus';
           links.add(url);
@@ -528,9 +521,7 @@ class SmartLinkExtractor {
 
   static String _cleanUrl(String url) {
     if (url.isEmpty) return '';
-    // Remove trailing punctuation
     url = url.replaceAll(RegExp(r'[.,;:!?\)\]\'"]+$'), '');
-    // Remove unicode fancy characters
     url = url.replaceAll(RegExp(r'[^\x00-\x7F]+$'), '');
     return url.trim();
   }
@@ -548,7 +539,6 @@ class SmartLinkExtractor {
     final urlLower = url.toLowerCase();
     if (indicators.any((ind) => urlLower.contains(ind))) return true;
     
-    // Check for port number
     return RegExp(r':\d{4,5}/').hasMatch(url);
   }
 
