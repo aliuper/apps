@@ -47,7 +47,7 @@ class AppProvider extends ChangeNotifier {
   List<LinkTestResult> get failedLinks => _failedLinks;
 
   // Auto process data
-  Set<String> _selectedCountries = {};
+  final Set<String> _selectedCountries = {};
   List<ExportedFile> _exportedFiles = [];
   int _totalFiltered = 0;
   int _totalChannels = 0;
@@ -184,28 +184,27 @@ class AppProvider extends ChangeNotifier {
       
       updateProgress(0.8, message: 'İşleniyor...');
       
-      var channels = result.channels;
-      var groups = result.groups;
+      var channelsList = result.channels;
+      var groupsMap = result.groups;
       
       if (_removeDuplicates) {
-        channels = M3UParser.removeDuplicates(channels);
-        // Rebuild groups
-        groups = {};
-        for (final ch in channels) {
-          if (!groups.containsKey(ch.group)) {
-            groups[ch.group] = ChannelGroup(
+        channelsList = M3UParser.removeDuplicates(channelsList);
+        groupsMap = {};
+        for (final ch in channelsList) {
+          if (!groupsMap.containsKey(ch.group)) {
+            groupsMap[ch.group] = ChannelGroup(
               name: ch.group,
               channels: [],
               logo: ch.logo,
               countryId: Countries.detect(ch.group)?.id ?? 'other',
             );
           }
-          groups[ch.group]!.channels.add(ch);
+          groupsMap[ch.group]!.channels.add(ch);
         }
       }
       
-      _channels = channels;
-      _groups = groups;
+      _channels = channelsList;
+      _groups = groupsMap;
       _expire = result.expire;
       _sourceUrl = url;
       

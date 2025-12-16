@@ -59,61 +59,6 @@ class GlassCard extends StatelessWidget {
   }
 }
 
-// ==================== GRADIENT CARD ====================
-class GradientCard extends StatelessWidget {
-  final Widget child;
-  final EdgeInsets? padding;
-  final EdgeInsets? margin;
-  final double borderRadius;
-  final List<Color>? colors;
-  final VoidCallback? onTap;
-
-  const GradientCard({
-    super.key,
-    required this.child,
-    this.padding,
-    this.margin,
-    this.borderRadius = 16,
-    this.colors,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.watch<AppProvider>().theme;
-    
-    return Container(
-      margin: margin,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: colors ?? [
-            theme.gradient1.withOpacity(0.15),
-            theme.gradient2.withOpacity(0.05),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(borderRadius),
-        border: Border.all(
-          color: theme.gradient1.withOpacity(0.2),
-          width: 1.5,
-        ),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(borderRadius),
-          child: Padding(
-            padding: padding ?? const EdgeInsets.all(16),
-            child: child,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 // ==================== ACCENT BUTTON ====================
 class AccentButton extends StatelessWidget {
   final String text;
@@ -143,7 +88,7 @@ class AccentButton extends StatelessWidget {
     
     return SizedBox(
       height: height,
-      width: width,
+      width: width ?? double.infinity,
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
@@ -156,7 +101,7 @@ class AccentButton extends StatelessWidget {
           shadowColor: (color ?? theme.accent).withOpacity(0.4),
         ),
         child: isLoading
-            ? SizedBox(
+            ? const SizedBox(
                 width: 24,
                 height: 24,
                 child: CircularProgressIndicator(
@@ -262,14 +207,15 @@ class IconButtonCircle extends StatelessWidget {
       child: InkWell(
         onTap: onPressed,
         borderRadius: BorderRadius.circular(size / 2),
-        child: Container(
+        child: SizedBox(
           width: size,
           height: size,
-          alignment: Alignment.center,
-          child: Icon(
-            icon,
-            color: color ?? theme.t1,
-            size: iconSize,
+          child: Center(
+            child: Icon(
+              icon,
+              color: color ?? theme.t1,
+              size: iconSize,
+            ),
           ),
         ),
       ),
@@ -528,65 +474,6 @@ class SelectionChip extends StatelessWidget {
               ),
             ],
           ],
-        ),
-      ),
-    );
-  }
-}
-
-// ==================== LOADING OVERLAY ====================
-class LoadingOverlay extends StatelessWidget {
-  final String message;
-  final double progress;
-  final bool show;
-
-  const LoadingOverlay({
-    super.key,
-    required this.message,
-    required this.progress,
-    required this.show,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.watch<AppProvider>().theme;
-    
-    if (!show) return const SizedBox.shrink();
-    
-    return Container(
-      color: Colors.black54,
-      child: Center(
-        child: GlassCard(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.sync,
-                color: theme.accent,
-                size: 48,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                message,
-                style: TextStyle(color: theme.t2, fontSize: 14),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: 200,
-                child: AnimatedProgressBar(progress: progress),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '%${(progress * 100).toInt()}',
-                style: TextStyle(
-                  color: theme.accent,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );

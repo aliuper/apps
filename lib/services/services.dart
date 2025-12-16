@@ -51,7 +51,6 @@ class DatabaseService {
     ''');
   }
 
-  // Favorites
   Future<List<Favorite>> getFavorites() async {
     final db = await database;
     final result = await db.query('favorites', orderBy: 'id DESC');
@@ -69,7 +68,6 @@ class DatabaseService {
     return await db.delete('favorites', where: 'url = ?', whereArgs: [url]);
   }
 
-  // Stats
   Future<AppStats> getStats() async {
     final db = await database;
     final result = await db.rawQuery('''
@@ -162,12 +160,11 @@ class HttpService {
       );
       return response.data.toString();
     } catch (e) {
-      throw Exception('Bağlantı hatası: ${e.toString().substring(0, 50)}');
+      throw Exception('Bağlantı hatası');
     }
   }
 
   static Future<LinkTestResult> testLink(String url, {String mode = 'deep', int timeout = 12}) async {
-    // Check cache
     final cacheKey = url.hashCode.toString();
     if (_cache.containsKey(cacheKey)) {
       return _cache[cacheKey]!;
@@ -191,7 +188,6 @@ class HttpService {
         return result;
       }
 
-      // Deep test
       final response = await _dio.get(
         url,
         options: Options(
@@ -334,7 +330,6 @@ class M3UParser {
   }
 
   static String? _extractExpire(String content, String url) {
-    // Try URL params
     final uri = Uri.tryParse(url);
     if (uri != null) {
       for (final key in ['exp', 'expires', 'expire', 'e']) {
@@ -355,7 +350,6 @@ class M3UParser {
       }
     }
 
-    // Try content patterns
     final patterns = [
       RegExp(r'[?&]exp[ire]*[s]?=(\d{10,13})'),
       RegExp(r'"exp[ire]*":\s*(\d{10,13})'),
@@ -412,104 +406,80 @@ class M3UParser {
 
 // ==================== SMART LINK EXTRACTOR ====================
 class SmartLinkExtractor {
-  static final List<RegExp> _urlPatterns = [
-    RegExp(r'(https?://[^\s<>"\']+?/get\.php\?[^\s<>"\']+)', caseSensitive: false),
-    RegExp(r'(https?://[^\s<>"\']+?/live/[^\s<>"\']+)', caseSensitive: false),
-    RegExp(r'(https?://[^\s<>"\']+?/movie/[^\s<>"\']+)', caseSensitive: false),
-    RegExp(r'(https?://[^\s<>"\']+?/series/[^\s<>"\']+)', caseSensitive: false),
-    RegExp(r'(https?://[^\s<>"\']+?/panel_api\.php\?[^\s<>"\']+)', caseSensitive: false),
-    RegExp(r'(https?://[^\s<>"\']+?/player_api\.php\?[^\s<>"\']+)', caseSensitive: false),
-    RegExp(r'(https?://[^\s<>"\']+?\.m3u8?(?:\?[^\s<>"\']*)?)', caseSensitive: false),
-    RegExp(r'(https?://[^\s<>"\']+?\.ts(?:\?[^\s<>"\']*)?)', caseSensitive: false),
-    RegExp(r'(https?://[^\s<>"\']+?:(?:8080|8000|25461|2095|2082|80)/[^\s<>"\']+)', caseSensitive: false),
-  ];
-
-  static final RegExp _portalPattern = RegExp(
-    r'(?:Portal|👀[^A-Za-z]*ℙ𝕠𝕣𝕥𝕒𝕝|Host|Server|🔰[^A-Za-z]*)[:\s]+\s*(https?://[^\s]+)',
-    caseSensitive: false,
-  );
-
-  static final RegExp _m3uEmojiPattern = RegExp(
-    r'🎬[^h]*(https?://[^\s<>"\']+)',
-    caseSensitive: false,
-  );
-
   static List<String> extractLinks(String text) {
     final links = <String>{};
 
-    // Method 1: Direct URL extraction
-    for (final pattern in _urlPatterns) {
-      final matches = pattern.allMatches(text);
-      for (final match in matches) {
-        final url = _cleanUrl(match.group(1) ?? '');
-        if (_isValidIptvUrl(url)) {
-          links.add(url);
-        }
-      }
-    }
-
-    // Method 2: M3U emoji pattern
-    final m3uMatches = _m3uEmojiPattern.allMatches(text);
-    for (final match in m3uMatches) {
+    // Pattern 1: get.php links
+    final getPhpPattern = RegExp(r'(https?://[^\s<>"]+/get\.php\?[^\s<>"]+)', caseSensitive: false);
+    for (final match in getPhpPattern.allMatches(text)) {
       final url = _cleanUrl(match.group(1) ?? '');
-      if (_isValidIptvUrl(url)) {
-        links.add(url);
-      }
+      if (url.isNotEmpty) links.add(url);
     }
 
-    // Method 3: Build URLs from portal + credentials
+    // Pattern 2: live/movie/series streams
+    final streamPattern = RegExp(r'(https?://[^\s<>"]+/(?:live|movie|series)/[^\s<>"]+)', caseSensitive: false);
+    for (final match in streamPattern.allMatches(text)) {
+      final url = _cleanUrl(match.group(1) ?? '');
+      if (url.isNotEmpty) links.add(url);
+    }
+
+    // Pattern 3: panel_api.php
+    final panelPattern = RegExp(r'(https?://[^\s<>"]+/panel_api\.php[^\s<>"]*)', caseSensitive: false);
+    for (final match in panelPattern.allMatches(text)) {
+      final url = _cleanUrl(match.group(1) ?? '');
+      if (url.isNotEmpty) links.add(url);
+    }
+
+    // Pattern 4: player_api.php
+    final playerPattern = RegExp(r'(https?://[^\s<>"]+/player_api\.php[^\s<>"]*)', caseSensitive: false);
+    for (final match in playerPattern.allMatches(text)) {
+      final url = _cleanUrl(match.group(1) ?? '');
+      if (url.isNotEmpty) links.add(url);
+    }
+
+    // Pattern 5: m3u/m3u8 files
+    final m3uPattern = RegExp(r'(https?://[^\s<>"]+\.m3u8?[^\s<>"]*)', caseSensitive: false);
+    for (final match in m3uPattern.allMatches(text)) {
+      final url = _cleanUrl(match.group(1) ?? '');
+      if (url.isNotEmpty) links.add(url);
+    }
+
+    // Pattern 6: IPTV ports
+    final portPattern = RegExp(r'(https?://[^\s<>"]+:\d{4,5}/[^\s<>"]+)', caseSensitive: false);
+    for (final match in portPattern.allMatches(text)) {
+      final url = _cleanUrl(match.group(1) ?? '');
+      if (_isValidIptvUrl(url)) links.add(url);
+    }
+
+    // Build URLs from portal + credentials
+    final portalPattern = RegExp(r'(?:Portal|Host|Server|URL)[:\s]+\s*(https?://[^\s]+)', caseSensitive: false);
+    final userPattern = RegExp(r'[Uu]ser(?:name)?[:\s=]+\s*([A-Za-z0-9_.-]+)');
+    final passPattern = RegExp(r'[Pp]ass(?:word)?[:\s=]+\s*([A-Za-z0-9_.-]+)');
+
     final portals = <String>[];
     final usernames = <String>[];
     final passwords = <String>[];
 
-    // Extract portals
-    final portalMatches = _portalPattern.allMatches(text);
-    for (final match in portalMatches) {
+    for (final match in portalPattern.allMatches(text)) {
       portals.add(_cleanUrl(match.group(1) ?? ''));
     }
 
-    // Extract usernames
-    final userPatterns = [
-      RegExp(r'[Uu]ser(?:name)?[:\s=]+\s*([A-Za-z0-9_.-]+)'),
-      RegExp(r'👥[^A-Za-z0-9]*([A-Za-z0-9_.-]+)'),
-    ];
-    for (final pattern in userPatterns) {
-      final matches = pattern.allMatches(text);
-      for (final match in matches) {
-        final user = match.group(1);
-        if (user != null && user.length > 2) {
-          usernames.add(user);
-        }
-      }
+    for (final match in userPattern.allMatches(text)) {
+      final user = match.group(1);
+      if (user != null && user.length > 2) usernames.add(user);
     }
 
-    // Extract passwords
-    final passPatterns = [
-      RegExp(r'[Pp]ass(?:word)?[:\s=]+\s*([A-Za-z0-9_.-]+)'),
-      RegExp(r'🔑[^A-Za-z0-9]*([A-Za-z0-9_.-]+)'),
-    ];
-    for (final pattern in passPatterns) {
-      final matches = pattern.allMatches(text);
-      for (final match in matches) {
-        final pass = match.group(1);
-        if (pass != null && pass.length > 2) {
-          passwords.add(pass);
-        }
-      }
+    for (final match in passPattern.allMatches(text)) {
+      final pass = match.group(1);
+      if (pass != null && pass.length > 2) passwords.add(pass);
     }
 
-    // Build URLs from combinations
     for (final portal in portals) {
       for (var i = 0; i < usernames.length; i++) {
         final user = usernames[i];
         final pwd = i < passwords.length ? passwords[i] : '';
         if (user.isNotEmpty && pwd.isNotEmpty) {
           var base = portal.endsWith('/') ? portal.substring(0, portal.length - 1) : portal;
-          
-          final hasPort = RegExp(r':\d+$').hasMatch(Uri.parse(base).host + (Uri.parse(base).hasPort ? ':${Uri.parse(base).port}' : ''));
-          if (!hasPort && !base.contains(':8080') && !base.contains(':2095')) {
-             base = base.replaceFirstMapped(RegExp(r'(https?://[^/]+)'), (m) => '${m.group(1)}:8080');
-          }
           final url = '$base/get.php?username=$user&password=$pwd&type=m3u_plus';
           links.add(url);
         }
@@ -521,8 +491,7 @@ class SmartLinkExtractor {
 
   static String _cleanUrl(String url) {
     if (url.isEmpty) return '';
-    url = url.replaceAll(RegExp(r'[.,;:!?\)\]\'"]+$'), '');
-    url = url.replaceAll(RegExp(r'[^\x00-\x7F]+$'), '');
+    url = url.replaceAll(RegExp(r'[.,;:!?\)\]"]+$'), '');
     return url.trim();
   }
 
@@ -541,34 +510,28 @@ class SmartLinkExtractor {
     
     return RegExp(r':\d{4,5}/').hasMatch(url);
   }
-
-  static String? extractExpireFromText(String text) {
-    final patterns = [
-      RegExp(r'[Ee]xp(?:ire)?[:\s]+(\d{4}-\d{2}-\d{2})'),
-      RegExp(r'📆\s*[^\d]*(\d{4}-\d{2}-\d{2})'),
-      RegExp(r'[Ee]xp(?:ire)?[:\s]+(\d{2}[./]\d{2}[./]\d{4})'),
-    ];
-    
-    for (final pattern in patterns) {
-      final match = pattern.firstMatch(text);
-      if (match != null) {
-        return match.group(1);
-      }
-    }
-    return null;
-  }
 }
 
 // ==================== FILE SERVICE ====================
 class FileService {
   static Future<String> get iptvFolder async {
-    final directory = await getExternalStorageDirectory();
-    final path = '${directory?.path ?? '/storage/emulated/0/Download'}/IPTV';
-    final dir = Directory(path);
-    if (!await dir.exists()) {
-      await dir.create(recursive: true);
+    try {
+      final directory = await getExternalStorageDirectory();
+      final path = '${directory?.path ?? '/storage/emulated/0/Download'}/IPTV';
+      final dir = Directory(path);
+      if (!await dir.exists()) {
+        await dir.create(recursive: true);
+      }
+      return path;
+    } catch (e) {
+      final directory = await getApplicationDocumentsDirectory();
+      final path = '${directory.path}/IPTV';
+      final dir = Directory(path);
+      if (!await dir.exists()) {
+        await dir.create(recursive: true);
+      }
+      return path;
     }
-    return path;
   }
 
   static Future<String> savePlaylist(String content, String filename) async {

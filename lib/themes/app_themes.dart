@@ -13,7 +13,7 @@ class AppThemes {
       ok: Color(0xFF08d9d6),
       warn: Color(0xFFedf756),
       err: Color(0xFFff2e63),
-      info: Color(0xFF252a34),
+      info: Color(0xFF3b82f6),
       t1: Color(0xFFffffff),
       t2: Color(0xFFeaeaea),
       t3: Color(0xFFaaaaaa),
@@ -85,41 +85,16 @@ class AppThemes {
 
 class AppTheme {
   final String name;
-  final Color bg;
-  final Color bg2;
-  final Color card;
-  final Color card2;
-  final Color accent;
-  final Color accent2;
-  final Color ok;
-  final Color warn;
-  final Color err;
-  final Color info;
-  final Color t1;
-  final Color t2;
-  final Color t3;
-  final Color t4;
-  final Color gradient1;
-  final Color gradient2;
+  final Color bg, bg2, card, card2, accent, accent2, ok, warn, err, info;
+  final Color t1, t2, t3, t4, gradient1, gradient2;
 
   const AppTheme({
-    required this.name,
-    required this.bg,
-    required this.bg2,
-    required this.card,
-    required this.card2,
-    required this.accent,
-    required this.accent2,
-    required this.ok,
-    required this.warn,
-    required this.err,
-    required this.info,
-    required this.t1,
-    required this.t2,
-    required this.t3,
-    required this.t4,
-    required this.gradient1,
-    required this.gradient2,
+    required this.name, required this.bg, required this.bg2,
+    required this.card, required this.card2, required this.accent,
+    required this.accent2, required this.ok, required this.warn,
+    required this.err, required this.info, required this.t1,
+    required this.t2, required this.t3, required this.t4,
+    required this.gradient1, required this.gradient2,
   });
 
   ThemeData toThemeData() {
@@ -130,61 +105,24 @@ class AppTheme {
       primaryColor: accent,
       colorScheme: ColorScheme(
         brightness: bg.computeLuminance() < 0.5 ? Brightness.dark : Brightness.light,
-        primary: accent,
-        onPrimary: Colors.white,
-        secondary: accent2,
-        onSecondary: Colors.white,
-        error: err,
-        onError: Colors.white,
-        surface: card,
-        onSurface: t1,
+        primary: accent, onPrimary: Colors.white,
+        secondary: accent2, onSecondary: Colors.white,
+        error: err, onError: Colors.white,
+        surface: card, onSurface: t1,
       ),
-      cardTheme: CardTheme(
-        color: card,
-        elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      ),
-      appBarTheme: AppBarTheme(
-        backgroundColor: bg,
-        foregroundColor: t1,
-        elevation: 0,
-      ),
+      cardTheme: CardTheme(color: card, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+      appBarTheme: AppBarTheme(backgroundColor: bg, foregroundColor: t1, elevation: 0),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: accent,
-          foregroundColor: Colors.white,
+          backgroundColor: accent, foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         ),
       ),
-      textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(foregroundColor: accent),
-      ),
       inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: bg2,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
+        filled: true, fillColor: bg2,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
         hintStyle: TextStyle(color: t4),
-      ),
-      textTheme: TextTheme(
-        displayLarge: TextStyle(color: t1, fontWeight: FontWeight.bold),
-        displayMedium: TextStyle(color: t1, fontWeight: FontWeight.bold),
-        displaySmall: TextStyle(color: t1, fontWeight: FontWeight.bold),
-        headlineLarge: TextStyle(color: t1, fontWeight: FontWeight.w600),
-        headlineMedium: TextStyle(color: t1, fontWeight: FontWeight.w600),
-        headlineSmall: TextStyle(color: t1, fontWeight: FontWeight.w600),
-        titleLarge: TextStyle(color: t1, fontWeight: FontWeight.w600),
-        titleMedium: TextStyle(color: t1, fontWeight: FontWeight.w500),
-        titleSmall: TextStyle(color: t2, fontWeight: FontWeight.w500),
-        bodyLarge: TextStyle(color: t2),
-        bodyMedium: TextStyle(color: t2),
-        bodySmall: TextStyle(color: t3),
-        labelLarge: TextStyle(color: t1, fontWeight: FontWeight.w600),
-        labelMedium: TextStyle(color: t2),
-        labelSmall: TextStyle(color: t3),
       ),
     );
   }
